@@ -2,10 +2,9 @@ import cv2
 import numpy as np
 
 
+VALUE = 10
 MARGIN = 0
-VALUE = 50
-WIDTH = 500
-HEIGHT = 500
+PERIMETER = 300
 
 
 def empty(x):
@@ -82,14 +81,12 @@ def trackbars(image):
         # takes the original image and use the mask on it
         image_result = cv2.bitwise_and(image, image, mask=mask)
 
-        final = stack_images(0.5, [[image, img_hsv], [mask, image_result]])
+        final = stack_images(SIZE, [[image, img_hsv], [mask, image_result]])
         cv2.imshow("Result", final)
         cv2.waitKey(1)
 
 
-def show_contours(image):
-    """
-    takes a image and (hopefully) get the contours of the shield """
+def get_contours_1(image):
     # lower and upper bounding in bgr format for the color of the shield
     lower = np.array([0, 0, 50])
     upper = np.array([120, 80, 255])
@@ -98,40 +95,59 @@ def show_contours(image):
 
     # now we get an colored image with the bitwise_and function
     image_result = cv2.bitwise_and(image, image, mask=mask)
+    """stacked_result = stack_images(SIZE, [[image, mask, image_result]])
+    cv2.imshow("First transformation", stacked_result)
+    cv2.waitKey(0)"""
+    get_contours_2(image_result, image)
 
-    # just for research probably (:
-    image_hsv = cv2.cvtColor(image_result, cv2.COLOR_BGR2HSV)
-    # image_hsv = cv2.cvtColor(image_hsv, cv2.COLOR_BGR2HSV)
-    # trackbars(image_result)
-    lower = np.array([0, 0, 0])
-    upper = np.array([179, 255, 110])
+
+def get_contours_2(image, original):
+    """
+    takes an image already edited with the bgr bounding, transforms it into an hsv and use an hsv bounding """
+    image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # bounding box
+    lower = np.array([160, 0, 0])
+    upper = np.array([179, 255, 255])
     mask = cv2.inRange(image_hsv, lower, upper)
-    mask = cv2.bitwise_not(mask)
+    # trackbars(image)
+    """stacked_result = stack_images(SIZE, [[image, image_hsv, mask]])
+    cv2.imshow("Result", stacked_result)
+    cv2.waitKey(0)"""
+    # mask = cv2.bitwise_not(mask)
     # creates an rectangular kernel
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
-    # dilates the mask with the kernel
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    # erodes and then dilates the mask with the kernel
+    mask = cv2.erode(mask, kernel=kernel, iterations=1)
     mask = cv2.dilate(mask, kernel=kernel, iterations=1)
     # smooth the image with a gaussian filter
     image_blur = cv2.GaussianBlur(mask, (5, 5), 1)
+    """stacked_result = stack_images(SIZE, [[image_hsv, mask, image_blur]])
+    cv2.imshow("Second Transformation", stacked_result)
+    cv2.waitKey(0)"""
+    get_contours_3(image_blur, original)
 
-    # save a contour which could be a shield in the following points
-    # w means width and h is height
-    x_biggest = y_biggest = w_biggest = h_biggest = 0
-    # get the contours
-    contours, hierarchy = cv2.findContours(image_blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    # since the area is not meaningful we want the biggest width
+
+def get_contours_3(image, original):
+    """
+    finally returns the contours. We take the smoothed image for contour detection """
+    contours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     max_peri = 0
-    # for every contour
-    for cnt in contours:
+    max_area = 0
+    max_vertices = 0
+    image_copy = original.copy()
+    x_biggest = y_biggest = w_biggest = h_biggest = 0
+    # iterate through the list of contours
+    for contour in contours:
         # get area, perimeter, approximation and vertices
-        area = cv2.contourArea(cnt)
-        peri = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
+        area = cv2.contourArea(contour)
+        peri = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
         vertices = len(approx)
         # get a bounding rectangle
         x, y, w, h = cv2.boundingRect(approx)
         # if the contour is almost a square, the area is bigger then 100 and it has more then 4 vertices
-        if w - VALUE < h < w + VALUE and area > 100 and vertices > 4:
+        if w - VALUE < h < w + VALUE and PERIMETER < peri and 4 < vertices < 20\
+                and 20000 < area and 100 < w:
             # we want the maximum perimeter because area is not that reliable
             if peri > max_peri:
                 # save the coordinates
@@ -141,30 +157,21 @@ def show_contours(image):
                 h_biggest = h
                 # revalue the maximum perimeter
                 max_peri = peri
+                max_area = area
+                max_vertices = vertices
             # draws an rectangle that satisfies the entire if conditions
-            cv2.rectangle(image, (x - MARGIN, y - MARGIN), (x + w + MARGIN, y + h + MARGIN), (0, 255, 0), 2)
-
-    # draws an rectangle around the biggest perimeter with a margin MARGIN
-    cv2.rectangle(image, (x_biggest - MARGIN, y_biggest - MARGIN),
-                         (x_biggest + w_biggest + MARGIN, y_biggest + h_biggest + MARGIN),
-                         (0, 0, 255), 10)
-    # takes all four corner points and brings them in order to warp
-    pts1 = np.float32([[x_biggest - MARGIN, y_biggest - MARGIN], [x_biggest + w_biggest + MARGIN, y_biggest - MARGIN],
-                       [x_biggest - MARGIN, y_biggest + h_biggest + MARGIN], [x_biggest + w_biggest + MARGIN, y_biggest + h_biggest + MARGIN]])
-    pts2 = np.float32([[0, 0], [w_biggest + 2 * MARGIN, 0],
-                       [0, h_biggest + 2 * MARGIN], [w_biggest+ 2 * MARGIN, h_biggest + 2 * MARGIN]])
-
-    warp_perspective = cv2.getPerspectiveTransform(pts1, pts2)
-    dst = cv2.warpPerspective(image, warp_perspective, (w_biggest + 2 * MARGIN, h_biggest + 2 * MARGIN))
-    dst = cv2.resize(dst, (WIDTH, HEIGHT))
-
-    result = stack_images(0.1, [[image, image_result, image_hsv], [mask, image_blur, image]])
-    cv2.imshow("Result", dst)
-    cv2.imshow("all Pictures", result)
+            cv2.rectangle(image_copy, (x - MARGIN, y - MARGIN), (x + w + MARGIN, y + h + MARGIN), (0, 0, 200), 20)
+    cv2.rectangle(image_copy, (x_biggest - MARGIN, y_biggest - MARGIN),
+                              (x_biggest + w_biggest + MARGIN, y_biggest + h_biggest + MARGIN),
+                              (0, 255, 0), 40)
+    print(h_biggest, w_biggest)
+    print(max_vertices, max_area, max_peri)
+    stacked_result = stack_images(SIZE, [[original, image, image_copy]])
+    cv2.imshow("finally!", stacked_result)
     cv2.waitKey(0)
 
 
-path = "pictures/20201122_124059.jpg"
-# reads and saves the image in img
-img = cv2.imread(path)
-show_contours(img)
+# define the size
+SIZE = 0.1
+img = cv2.imread("../milestone1/pictures/50er3.jpg")
+get_contours_1(img)
