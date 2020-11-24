@@ -46,46 +46,6 @@ def stack_images(image_scale, image_array):
     return first_image_row
 
 
-def trackbars(image):
-    """
-    creates an trackbar window and an image and
-    shows points in the image according to the position of the trackbars
-    """
-    # creates trackbars for an image in hsv format
-    # 3 channels: hue, saturation, value
-    cv2.namedWindow("Trackbars")
-    cv2.resizeWindow("Trackbars", 640, 240)
-    cv2.createTrackbar("Hue Min", "Trackbars", 0, 179, empty)
-    cv2.createTrackbar("Sat Min", "Trackbars", 0, 255, empty)
-    cv2.createTrackbar("Val Min", "Trackbars", 0, 255, empty)
-    cv2.createTrackbar("Hue Max", "Trackbars", 179, 179, empty)
-    cv2.createTrackbar("Sat Max", "Trackbars", 255, 255, empty)
-    cv2.createTrackbar("Val Max", "Trackbars", 179, 255, empty)
-
-    # transform the image into the hsv
-    img_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # we constantly want to refresh the image (while the trackbars are moving)
-    while True:
-        # get the position of all 6 trackbars
-        h_min = cv2.getTrackbarPos("Hue Min", "Trackbars")
-        h_max = cv2.getTrackbarPos("Hue Max", "Trackbars")
-        s_min = cv2.getTrackbarPos("Sat Min", "Trackbars")
-        s_max = cv2.getTrackbarPos("Sat Max", "Trackbars")
-        v_min = cv2.getTrackbarPos("Val Min", "Trackbars")
-        v_max = cv2.getTrackbarPos("Val Max", "Trackbars")
-        # create an numpy array with the lower and upper position of the trackbars
-        lower = np.array([h_min, s_min, v_min])
-        upper = np.array([h_max, s_max, v_max])
-        # creates an mask which has value 1 if the image point is in the bounding box defined by lower, upper
-        mask = cv2.inRange(img_hsv, lower, upper)
-        # takes the original image and use the mask on it
-        image_result = cv2.bitwise_and(image, image, mask=mask)
-
-        final = stack_images(SIZE, [[image, img_hsv], [mask, image_result]])
-        cv2.imshow("Result", final)
-        cv2.waitKey(1)
-
-
 def get_contours_1(image):
     # lower and upper bounding in bgr format for the color of the shield
     lower = np.array([0, 0, 50])
@@ -109,7 +69,6 @@ def get_contours_2(image, original):
     lower = np.array([160, 0, 0])
     upper = np.array([179, 255, 255])
     mask = cv2.inRange(image_hsv, lower, upper)
-    # trackbars(image)
     """stacked_result = stack_images(SIZE, [[image, image_hsv, mask]])
     cv2.imshow("Result", stacked_result)
     cv2.waitKey(0)"""
