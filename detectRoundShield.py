@@ -7,12 +7,6 @@ MARGIN = 0
 PERIMETER = 300
 
 
-def empty(x):
-    """
-    only because the trackbars need an function """
-    pass
-
-
 def stack_images(image_scale, image_array):
     """
     takes an positive real number and an matrix containing images.
