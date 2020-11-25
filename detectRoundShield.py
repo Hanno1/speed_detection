@@ -69,6 +69,7 @@ def get_contours_hsv(image, original):
 def get_contours_final(image, original):
     """
     finally returns the contours. We take the smoothed image for contour detection """
+    # get the contours of the given image
     contours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     image_copy = original.copy()
     # save all important areas in a list
@@ -92,7 +93,7 @@ def get_contours_final(image, original):
         """
         if 100 < w < 50000 and 100 < h < 50000 and w - VALUE < h < w + VALUE and 20000 < area \
                 and 4 < vertices < 20 and PERIMETER < peri:
-            # save the coordinates
+            # save the coordinates and add them to the list
             coordinates = [x, y, w, h]
             nice_areas.append(coordinates)
     # for every area draw the corresponding rectangle
@@ -113,8 +114,6 @@ VALUE = 10
 MARGIN = 20
 # define the smallest perimeter for an shield
 PERIMETER = 300
-# define the size
-SIZE = 0.1
 
 img = cv2.imread("../milestone1/pictures/50er3.jpg")
 get_contours_bgr(img)
