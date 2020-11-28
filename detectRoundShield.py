@@ -91,7 +91,7 @@ def get_contours_final(image, original):
         - the polygon has more than 4 but less than 20 vertices (since it should be a circle)
         - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
         """
-        if 100 < w < 50000 and 100 < h < 50000 and w - VALUE < h < w + VALUE and 20000 < area \
+        if 100 < w < 50000 and 100 < h < 50000 and w - DIFF < h < w + DIFF and AREA < area \
                 and 4 < vertices < 20 and PERIMETER < peri:
             # save the coordinates and add them to the list
             coordinates = [x, y, w, h]
@@ -102,6 +102,9 @@ def get_contours_final(image, original):
                       (area[0] + area[2] + MARGIN, area[1] + area[3] + MARGIN),
                       (0, 255, 0), 40)
     stacked_result = stack_images(SIZE, [[original, image, image_copy]])
+    cv2.imwrite("../milestone1/original.jpg", original)
+    cv2.imwrite("../milestone1/finalMask.jpg", image)
+    cv2.imwrite("../milestone1/result.jpg", image_copy)
     cv2.imshow("finally!", stacked_result)
     cv2.waitKey(0)
 
@@ -109,11 +112,14 @@ def get_contours_final(image, original):
 # define the size of the outcome should be around 0.1
 SIZE = 0.1
 # The difference of width and height of a shield should not be bigger then Value
-VALUE = 10
+DIFF = 10
 # Define a margin in the output image
 MARGIN = 20
 # define the smallest perimeter for an shield
 PERIMETER = 300
+# define the smallest Area
+AREA = 20000
 
-img = cv2.imread("../milestone1/pictures/50er3.jpg")
+path = "pictures/50er5.jpg"
+img = cv2.imread(path)
 get_contours_bgr(img)
