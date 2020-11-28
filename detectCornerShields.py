@@ -85,8 +85,16 @@ def get_contours_final(image, original):
         vertices = len(approx)
         # get a bounding rectangle
         x, y, w, h = cv2.boundingRect(approx)
-        # if the contour is a rectangle, the area is bigger then 100 and it has more then 4 vertices
-        if PERIMETER < peri and 2 < vertices < 10 and 20000 < area and 100 < w:
+        """
+        We want to save a area if:
+        - width (w) and height (h) are not to small
+        - We can have a image in perspective and in this case w can be really small so we demand that 100 < w, 
+            but w shouldn't be bigger than h + DIFF
+        - the area is bigger than AREA
+        - the polygon has at least 4 but less than 10 vertices (since it should be a rectangle)
+        - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
+        """
+        if PERIMETER < peri and 3 < vertices < 10 and AREA < area and 100 < w < 2*h + VALUE and 100 < h:
             # save the coordinates and add them to the list
             coordinates = [x, y, w, h]
             nice_areas.append(coordinates)
@@ -108,6 +116,8 @@ VALUE = 10
 MARGIN = 20
 # define the smallest perimeter for an shield
 PERIMETER = 300
+# define the smallest Area
+AREA = 20000
 
-img = cv2.imread("../milestone1/pictures/spielstrasse5.jpg")
+img = cv2.imread("pictures/spielstrasse1.jpg")
 get_contours_bgr(img)

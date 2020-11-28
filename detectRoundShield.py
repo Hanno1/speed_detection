@@ -86,12 +86,13 @@ def get_contours_final(image, original):
         """
         We want to save a area if:
         - width (w) and height (h) are between 100 and 50000
-        - w and h are almost the same
-        - the area is bigger than 20000
+        - We can have a image in perspective and in this case w can be really small so we demand that 100 < w, 
+            but w has to be smaller the h + DIFF
+        - the area is bigger than AREA
         - the polygon has more than 4 but less than 20 vertices (since it should be a circle)
         - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
         """
-        if 100 < w < 50000 and 100 < h < 50000 and w - DIFF < h < w + DIFF and AREA < area \
+        if 100 < w < 50000 and 100 < h < 50000 and 100 < w < h + DIFF and AREA < area \
                 and 4 < vertices < 20 and PERIMETER < peri:
             # save the coordinates and add them to the list
             coordinates = [x, y, w, h]
@@ -102,9 +103,6 @@ def get_contours_final(image, original):
                       (area[0] + area[2] + MARGIN, area[1] + area[3] + MARGIN),
                       (0, 255, 0), 40)
     stacked_result = stack_images(SIZE, [[original, image, image_copy]])
-    cv2.imwrite("../milestone1/original.jpg", original)
-    cv2.imwrite("../milestone1/finalMask.jpg", image)
-    cv2.imwrite("../milestone1/result.jpg", image_copy)
     cv2.imshow("finally!", stacked_result)
     cv2.waitKey(0)
 
@@ -112,7 +110,7 @@ def get_contours_final(image, original):
 # define the size of the outcome should be around 0.1
 SIZE = 0.1
 # The difference of width and height of a shield should not be bigger then Value
-DIFF = 10
+DIFF = 50
 # Define a margin in the output image
 MARGIN = 20
 # define the smallest perimeter for an shield
@@ -120,6 +118,6 @@ PERIMETER = 300
 # define the smallest Area
 AREA = 20000
 
-path = "pictures/50er5.jpg"
+path = "pictures/30er1.jpg"
 img = cv2.imread(path)
 get_contours_bgr(img)
