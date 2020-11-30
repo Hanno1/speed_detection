@@ -57,10 +57,10 @@ def trackbars(img):
         mask = cv2.inRange(img_hsv, lower, upper)
         image_result = cv2.bitwise_and(img, img, mask=mask)
 
-        final = stack_images(0.5, [[img, img_hsv], [mask, image_result]])
+        final = stack_images(0.15, [[img, img_hsv], [mask, image_result]])
         cv2.imshow("Result", final)
         cv2.waitKey(1)
 
 
-img = cv2.imread("../milestone1/pictures/spielstrasse.jpg")
+img = cv2.imread("pictures/spielstrasse3.jpg")
 trackbars(img)

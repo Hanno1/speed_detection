@@ -37,9 +37,9 @@ def trackbars(img):
     cv2.resizeWindow("Trackbars", 640, 240)
     cv2.createTrackbar("Blue Min", "Trackbars", 0, 255, empty)
     cv2.createTrackbar("Green Min", "Trackbars", 0, 255, empty)
-    cv2.createTrackbar("Red Min", "Trackbars", 0, 255, empty)
-    cv2.createTrackbar("Blue Max", "Trackbars", 255, 255, empty)
-    cv2.createTrackbar("Green Max", "Trackbars", 255, 255, empty)
+    cv2.createTrackbar("Red Min", "Trackbars", 50, 255, empty)
+    cv2.createTrackbar("Blue Max", "Trackbars", 120, 255, empty)
+    cv2.createTrackbar("Green Max", "Trackbars", 110, 255, empty)
     cv2.createTrackbar("Red Max", "Trackbars", 255, 255, empty)
 
     # img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -62,5 +62,5 @@ def trackbars(img):
         cv2.waitKey(1)
 
 
-img = cv2.imread("../milestone1/pictures/20201122_124047.jpg")
+img = cv2.imread("pictures/30er4.jpg")
 trackbars(img)
