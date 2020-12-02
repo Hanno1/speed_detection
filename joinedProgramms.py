@@ -92,7 +92,6 @@ def get_contours_all_corner(image):
         vertices = len(approx)
         # get a bounding rectangle
         x, y, w, h = cv2.boundingRect(approx)
-        print(area, peri, vertices)
         """
         We want to save a area if:
         - width (w) and height (h) are not to small
@@ -149,33 +148,35 @@ def get_contours_all_round(image):
         - the area is bigger than AREA
         - the polygon has more than 4 but less than 20 vertices (since it should be a circle)
         - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
+        
+        100 < w < 50000 and 100 < h < 50000 and 100 < w < h + DIFF and AREA < area \
+                and 4 < vertices < 20 and PERIMETER < peri
         """
-        if 100 < w < 50000 and 100 < h < 50000 and 100 < w < h + DIFF and AREA < area \
-                and 4 < vertices < 20 and PERIMETER < peri:
+        if True:
             # save the coordinates and add them to the list
             coordinates = [x, y, w, h]
             nice_areas.append(coordinates)
     return nice_areas, image_blur
 
 
-path = "pictures/30er4.jpg"
-img = cv2.imread(path)
+path = "pictures/30er1.jpg"
 
+img = cv2.imread(path)
 img_height = np.shape(img)[0]
 img_width = np.shape(img)[1]
 img_area = img_height * img_width
 
 # define the size of the outcome depending on the area of the image
-SIZE = img_area * 8 * 10**(-9)
+SIZE = img_area * 8 * 10 ** (-9)
 # we only take the first two numbers after the comma
 SIZE = float("{:.2f}".format(SIZE))
 # The difference of width and height of a shield should not be bigger then Value.
 # For my pictures its around 50 pixels
-DIFF = img_area * 3 * 10**(-6)
+DIFF = img_area * 3 * 10 ** (-6)
 # define the smallest perimeter for an shield
-PERIMETER = img_area * 2 * 10**(-5)
+PERIMETER = img_area * 2 * 10 ** (-5)
 # define the smallest Area depending on the area of the image
-AREA = img_area * 10**(-3)
+AREA = img_area * 10 ** (-3)
 # Define a margin in the output image
 MARGIN = 20
 
@@ -191,6 +192,50 @@ for rect in result_corner_areas:
                   (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
                   (0, 255, 0), 40)
 
+print(np.shape(img), np.shape(mask1), np.shape(mask2))
 final = stack_images(SIZE, [[img, mask1, mask2]])
-cv2.imshow("finally!", final)
+cv2.imshow("finale", final)
 cv2.waitKey(0)
+
+# just a test with a video: but the resolution is to bad so everything gets eroded
+"""path2 = "../milestone1/videos/01Dezember.mp4"
+cap = cv2.VideoCapture(path2)
+successor, img = cap.read()
+
+img_height = np.shape(img)[0]
+img_width = np.shape(img)[1]
+img_area = img_height * img_width
+
+# define the size of the outcome depending on the area of the image
+SIZE = img_area * 8 * 10 ** (-9)
+# we only take the first two numbers after the comma
+SIZE = float("{:.2f}".format(SIZE))
+# The difference of width and height of a shield should not be bigger then Value.
+# For my pictures its around 50 pixels
+DIFF = img_area * 3 * 10 ** (-6)
+# define the smallest perimeter for an shield
+PERIMETER = img_area * 2 * 10 ** (-5)
+# define the smallest Area depending on the area of the image
+AREA = img_area * 10 ** (-3)
+# Define a margin in the output image
+MARGIN = 20
+
+while True:
+    successor, img = cap.read()
+    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+
+    result_round_areas, mask1 = get_contours_all_round(img)
+    result_corner_areas, mask2 = get_contours_all_corner(img)
+
+    for rect in result_round_areas:
+        cv2.rectangle(img, (rect[0] - MARGIN, rect[1] - MARGIN),
+                      (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
+                      (0, 255, 0), 10)
+    for rect in result_corner_areas:
+        cv2.rectangle(img, (rect[0] - MARGIN, rect[1] - MARGIN),
+                      (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
+                      (0, 0, 255), 10)
+    cv2.imshow("Video", img)
+    cv2.waitKey(60)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break"""

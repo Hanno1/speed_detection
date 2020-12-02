@@ -40,7 +40,7 @@ def get_contours_bgr(image):
     takes an image and computes all points in range of a given color bonding box (BGR) """
     # lower and upper bounding in bgr format for the color of the shield
     lower = np.array([0, 0, 50])
-    upper = np.array([120, 80, 255])
+    upper = np.array([160, 110, 255])
     # creates an mask which filters through the image and sets values in the bounding box to 1 (else 0)
     mask = cv2.inRange(image, lower, upper)
     # now we get an colored image with the bitwise_and function
@@ -56,13 +56,14 @@ def get_contours_hsv(image, original):
     lower = np.array([160, 0, 0])
     upper = np.array([179, 255, 255])
     mask = cv2.inRange(image_hsv, lower, upper)
+
     # creates an rectangular kernel
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     # erodes and then dilates the mask with the kernel
     mask = cv2.erode(mask, kernel=kernel, iterations=1)
     mask = cv2.dilate(mask, kernel=kernel, iterations=1)
     # smooth the image with a gaussian filter
-    image_blur = cv2.GaussianBlur(mask, (5, 5), 1)
+    image_blur = cv2.GaussianBlur(mask, (3, 3), 1)
     get_contours_final(image_blur, original)
 
 
@@ -108,7 +109,7 @@ def get_contours_final(image, original):
 
 
 # define the size of the outcome should be around 0.1
-SIZE = 0.1
+SIZE = 1
 # The difference of width and height of a shield should not be bigger then Value
 DIFF = 50
 # Define a margin in the output image
@@ -119,5 +120,6 @@ PERIMETER = 300
 AREA = 20000
 
 path = "pictures/30er1.jpg"
-img = cv2.imread(path)
+path2 = "../milestone1/videos/01Dezember1.jpg"
+img = cv2.imread(path2)
 get_contours_bgr(img)
