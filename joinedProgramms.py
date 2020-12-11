@@ -94,14 +94,14 @@ def get_contours_all_corner(image):
         x, y, w, h = cv2.boundingRect(approx)
         """
         We want to save a area if:
-        - width (w) and height (h) are not to small
-        - We can have a image in perspective and in this case w can be really small so we demand that 100 < w, 
-            but w shouldn't be bigger than h + DIFF
-        - the area is bigger than AREA
-        - the polygon has at least 4 but less than 10 vertices (since it should be a rectangle)
-        - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
+        - w is approximately between h and 2h
+        - perimeter is approximately 2w + 2h (like a normal rectangle)
+        - the vertices are between 3 and 10 (not always recognized as a rect)
+        - the height of the shield is not to small or big
+        - the area is not to small
         """
-        if PERIMETER < peri and 3 < vertices < 20 and AREA < area and 100 < h:
+        if h - VAR < w < 2*h + VAR and 2*w + 2*h - VAR < peri < 2*w + 2*h + VAR and 3 < vertices < 10\
+                and img_height // 10 < h < img_height // 3 and 150000 < area:
             # save the coordinates and add them to the list
             coordinates = [x, y, w, h]
             nice_areas.append(coordinates)
@@ -128,38 +128,28 @@ def get_contours_all_round(image):
 
     # --- Part 3 --- #
     # get the contours of the given image
-    contours, hierarchy = cv2.findContours(image_blur, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    # save all important areas in a list
-    nice_areas = []
-    # iterate through the list of contours
-    for contour in contours:
-        # get area, perimeter, approximation and vertices
-        area = cv2.contourArea(contour)
-        peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
-        vertices = len(approx)
-        # get a bounding rectangle
-        x, y, w, h = cv2.boundingRect(approx)
-        """
-        We want to save a area if:
-        - width (w) and height (h) are between 100 and 50000
-        - We can have a image in perspective and in this case w can be really small so we demand that 100 < w, 
-            but w has to be smaller the h + DIFF
-        - the area is bigger than AREA
-        - the polygon has more than 4 but less than 20 vertices (since it should be a circle)
-        - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
-        
-        100 < w < 50000 and 100 < h < 50000 and 100 < w < h + DIFF and AREA < area \
-                and 4 < vertices < 20 and PERIMETER < peri
-        """
-        if True:
-            # save the coordinates and add them to the list
-            coordinates = [x, y, w, h]
-            nice_areas.append(coordinates)
-    return nice_areas, image_blur
+    params = cv2.SimpleBlobDetector_Params()
+
+    params.filterByArea = True
+    params.maxArea = 500000
+    params.minArea = 10000
+
+    params.filterByCircularity = True
+    params.minCircularity = 0.7
+
+    params.filterByConvexity = True
+    params.minConvexity = 0.9
+
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.6
+
+    detector = cv2.SimpleBlobDetector_create(params)
+    keyp = detector.detect(image_blur)
+
+    return keyp, image_blur
 
 
-path = "pictures/30er1.jpg"
+path = "pictures/30er5.jpg"
 
 img = cv2.imread(path)
 img_height = np.shape(img)[0]
@@ -179,63 +169,29 @@ PERIMETER = img_area * 2 * 10 ** (-5)
 AREA = img_area * 10 ** (-3)
 # Define a margin in the output image
 MARGIN = 20
+# Var is the difference in which the perimeter can differ
+VAR = 200
 
-result_round_areas, mask1 = get_contours_all_round(img)
+# we don't need to look at pixel below normal shield height 5/6 width
+img = img[0: 5 * img_height // 6, 0: img_width]
+# update the height
+img_height = np.shape(img)[0]
+
+keypoints, mask1 = get_contours_all_round(img)
 result_corner_areas, mask2 = get_contours_all_corner(img)
 
-for rect in result_round_areas:
-    cv2.rectangle(img, (rect[0] - MARGIN, rect[1] - MARGIN),
-                  (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
-                  (0, 255, 0), 40)
+for keypoint in keypoints:
+    x = int(keypoint.pt[0])
+    y = int(keypoint.pt[1])
+    r = int(keypoint.size)
+    cv2.circle(img, (x, y), r, (0, 0, 255), 20)
+
 for rect in result_corner_areas:
     cv2.rectangle(img, (rect[0] - MARGIN, rect[1] - MARGIN),
                   (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
                   (0, 255, 0), 40)
 
-print(np.shape(img), np.shape(mask1), np.shape(mask2))
+# cv2.imwrite("../milestone1/30er3Mask.jpg", mask1)
 final = stack_images(SIZE, [[img, mask1, mask2]])
 cv2.imshow("finale", final)
 cv2.waitKey(0)
-
-# just a test with a video: but the resolution is to bad so everything gets eroded
-"""path2 = "../milestone1/videos/01Dezember.mp4"
-cap = cv2.VideoCapture(path2)
-successor, img = cap.read()
-
-img_height = np.shape(img)[0]
-img_width = np.shape(img)[1]
-img_area = img_height * img_width
-
-# define the size of the outcome depending on the area of the image
-SIZE = img_area * 8 * 10 ** (-9)
-# we only take the first two numbers after the comma
-SIZE = float("{:.2f}".format(SIZE))
-# The difference of width and height of a shield should not be bigger then Value.
-# For my pictures its around 50 pixels
-DIFF = img_area * 3 * 10 ** (-6)
-# define the smallest perimeter for an shield
-PERIMETER = img_area * 2 * 10 ** (-5)
-# define the smallest Area depending on the area of the image
-AREA = img_area * 10 ** (-3)
-# Define a margin in the output image
-MARGIN = 20
-
-while True:
-    successor, img = cap.read()
-    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-
-    result_round_areas, mask1 = get_contours_all_round(img)
-    result_corner_areas, mask2 = get_contours_all_corner(img)
-
-    for rect in result_round_areas:
-        cv2.rectangle(img, (rect[0] - MARGIN, rect[1] - MARGIN),
-                      (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
-                      (0, 255, 0), 10)
-    for rect in result_corner_areas:
-        cv2.rectangle(img, (rect[0] - MARGIN, rect[1] - MARGIN),
-                      (rect[0] + rect[2] + MARGIN, rect[1] + rect[3] + MARGIN),
-                      (0, 0, 255), 10)
-    cv2.imshow("Video", img)
-    cv2.waitKey(60)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break"""

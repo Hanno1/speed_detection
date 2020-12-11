@@ -109,7 +109,7 @@ def get_contours_final(image, original):
 
 
 # define the size of the outcome should be around 0.1
-SIZE = 1
+SIZE = 0.1
 # The difference of width and height of a shield should not be bigger then Value
 DIFF = 50
 # Define a margin in the output image
@@ -120,6 +120,5 @@ PERIMETER = 300
 AREA = 20000
 
 path = "pictures/30er1.jpg"
-path2 = "../milestone1/videos/01Dezember1.jpg"
-img = cv2.imread(path2)
+img = cv2.imread(path)
 get_contours_bgr(img)

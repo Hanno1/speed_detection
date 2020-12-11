@@ -38,7 +38,7 @@ def trackbars(img):
     cv2.createTrackbar("Blue Min", "Trackbars", 0, 255, empty)
     cv2.createTrackbar("Green Min", "Trackbars", 0, 255, empty)
     cv2.createTrackbar("Red Min", "Trackbars", 50, 255, empty)
-    cv2.createTrackbar("Blue Max", "Trackbars", 120, 255, empty)
+    cv2.createTrackbar("Blue Max", "Trackbars", 160, 255, empty)
     cv2.createTrackbar("Green Max", "Trackbars", 110, 255, empty)
     cv2.createTrackbar("Red Max", "Trackbars", 255, 255, empty)
 
@@ -57,11 +57,11 @@ def trackbars(img):
         mask = cv2.inRange(img, lower, upper)
         image_result = cv2.bitwise_and(img, img, mask=mask)
 
-        final = stack_images(1, [[img, image_result]])
+        final = stack_images(0.2, [[img, image_result]])
         cv2.imshow("Result", final)
         cv2.waitKey(1)
 
 
-img = cv2.imread("pictures/30er4.jpg")
+img = cv2.imread("pictures/30er5.jpg")
 trackbars(img)
 
