@@ -1,3 +1,4 @@
 houghTransformationTest.py
 lightInvarianceTest.py
 StackImages.py
+GrayScaleHistogramm.py

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import math
 
 
 def stack_images(image_scale, image_array):
@@ -72,38 +73,20 @@ def get_contours_final(image, original):
     """
     finally returns the contours. We take the smoothed image for contour detection """
     # get the contours of the given image
-    contours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    image_copy = original.copy()
-    # save areas which are possible shields in list
-    nice_areas = []
-    # iterate through the list of contours
-    for contour in contours:
-        # get area, perimeter, approximation and vertices
-        area = cv2.contourArea(contour)
-        peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
-        vertices = len(approx)
-        # get a bounding rectangle
-        x, y, w, h = cv2.boundingRect(approx)
-        """
-        We want to save a area if:
-        - width (w) and height (h) are not to small
-        - We can have a image in perspective and in this case w can be really small so we demand that 100 < w, 
-            but w shouldn't be bigger than h + DIFF
-        - the area is bigger than AREA
-        - the polygon has at least 4 but less than 10 vertices (since it should be a rectangle)
-        - the perimeter must be bigger than the constant PERIMETER which is defined in outer scope
-        """
-        if PERIMETER < peri and 3 < vertices < 10 and AREA < area and 100 < w < 2*h + VALUE and 100 < h:
-            # save the coordinates and add them to the list
-            coordinates = [x, y, w, h]
-            nice_areas.append(coordinates)
-    # put all suitable areas in a rectangle
-    for area in nice_areas:
-        cv2.rectangle(image_copy, (area[0] - MARGIN, area[1] - MARGIN),
-                      (area[0] + area[2] + MARGIN, area[1] + area[3] + MARGIN),
-                      (0, 255, 0), 40)
-    stacked_result = stack_images(SIZE, [[original, image, image_copy]])
+    lines = cv2.HoughLines(image, 1, np.pi / 180, 150, None, 0, 0)
+    # Draw the lines
+    if lines is not None:
+        for i in range(0, len(lines)):
+            rho = lines[i][0][0]
+            theta = lines[i][0][1]
+            a = math.cos(theta)
+            b = math.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
+            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
+            cv2.line(original, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+    stacked_result = stack_images(SIZE, [[original, image]])
     cv2.imshow("finally!", stacked_result)
     cv2.waitKey(0)
 

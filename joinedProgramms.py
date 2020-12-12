@@ -126,6 +126,9 @@ def get_contours_all_round(image):
     upper = np.array([179, 255, 255])
     image_blur = get_hsv_values(image_result, lower, upper)
 
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    mask = cv2.dilate(image_blur, kernel=kernel, iterations=2)
+
     # --- Part 3 --- #
     # get the contours of the given image
     params = cv2.SimpleBlobDetector_Params()
@@ -141,15 +144,15 @@ def get_contours_all_round(image):
     params.minConvexity = 0.9
 
     params.filterByInertia = True
-    params.minInertiaRatio = 0.6
+    params.minInertiaRatio = 0.5
 
     detector = cv2.SimpleBlobDetector_create(params)
-    keyp = detector.detect(image_blur)
+    keyp = detector.detect(mask)
 
-    return keyp, image_blur
+    return keyp, mask
 
 
-path = "pictures/30er5.jpg"
+path = "pictures/20er2.jpg"
 
 img = cv2.imread(path)
 img_height = np.shape(img)[0]
@@ -183,7 +186,9 @@ result_corner_areas, mask2 = get_contours_all_corner(img)
 for keypoint in keypoints:
     x = int(keypoint.pt[0])
     y = int(keypoint.pt[1])
-    r = int(keypoint.size)
+    # r = int(keypoint.size) // 2 + 10
+    r = int(keypoint.size) // 2
+    cv2.rectangle(img, (x-r, y-r), (x+r, y+r), (255, 0, 0), 10)
     cv2.circle(img, (x, y), r, (0, 0, 255), 20)
 
 for rect in result_corner_areas:
