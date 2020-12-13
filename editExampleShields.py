@@ -50,12 +50,11 @@ def convert_original(image):
     cv2.waitKey(0)
 
 
-def compare(image, custom=True):
+def compare(image, compare_path, custom=True):
     """
-    compare given image to 60 image
+    compare given image to 30 image
     """
-    path0 = "normPictures/30norm.png"
-    img0 = cv2.imread(path0)
+    img0 = cv2.imread(compare_path)
 
     img0 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
     ret, thresh1 = cv2.threshold(img0, 127, 255, cv2.THRESH_BINARY)
@@ -73,17 +72,26 @@ def compare(image, custom=True):
     mask_gray = np.sum(mask) / 255
 
     diff = original_gray - mask_gray
-    print(diff)
+    return diff
 
-    cv2.imshow("compared", mask)
-    cv2.waitKey(0)
 
-    cv2.imwrite("../milestone2/Arbeit/classificationTry.png", mask)
+def compare_all(image):
+    """
+    compare given image to every original image and get minimal difference
+    """
+    differences = []
+    p = "normPictures/5norm.png"
+    differences.append(compare(image, p))
+    for i in range(1, 14):
+        p = "normPictures/" + str(i) + "0norm.png"
+        differences.append(compare(image, p))
+    print(differences)
+    print(np.argmax(differences))
 
 
 def resizing():
     """
-    resize every image in normPictures to size (500, 500)
+    resize every image in normPictures to size (SIZE, SIZE)
     """
     for i in range(1, 14):
         p = "normPictures/" + str(i) + "0norm.png"
@@ -108,17 +116,15 @@ def edit_custom_image(image, gray=80):
             else:
                 image[row][col] = 0
 
-    """ cv2.imshow("winname", image)
-    cv2.waitKey(0)"""
-
     return image
 
 
 SIZE = 500
 
-path = "normPictures/40norm.png"
+path = "normPictures/justTrying1.png"
 img = cv2.imread(path)
 img = edit_custom_image(img)
+cv2.imshow("image", img)
+cv2.waitKey(0)
 
-# resizing()
-compare(img)
+# compare_all(img)
