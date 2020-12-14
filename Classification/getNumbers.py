@@ -27,38 +27,46 @@ def return_numbers(image):
     image_copy = image_gray.copy()
 
     image_blur = cv2.GaussianBlur(image_copy, (5, 5), 1)
-    image_canny = cv2.Canny(image_blur, 100, 200)
 
-    # invert gray image for neural network
-    """for i in range(0, len(image_gray[0])):
-        for j in range(0, len(image_gray[0])):
-            image_gray[i][j] = 255 - image_gray[i][j]"""
-
-    contours, hierarchy = cv2.findContours(image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(image_blur, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
     image_gray = cv2.cvtColor(image_gray, cv2.COLOR_GRAY2BGR)
-    cv2.imshow("result", image_gray)
-    cv2.waitKey(0)
     numbers = []
     for contour in contours:
         peri = cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
         x, y, w, h = cv2.boundingRect(approx)
-        if w - VALUE < h < 2*w + VALUE and 5000 < w*h:
-            cv2.rectangle(image_canny, (x, y), (x + w, y + h), (0, 0, 255), 3)
+        if 2*w - VALUE < h < 2*w + VALUE and 10000 < w*h:
+            print(w*h)
             number = image_gray[y:y+h, x:x+w]
-            number = cv2.resize(number, (14, 26))
+            number = cv2.resize(number, (50, 100))
             numbers.append(number)
-    overlay = np.zeros((28, 28, 3))
-    for i in range(0, 28):
-        for j in range(0, 28):
-            overlay[i][j] = 255
+            # cv2.rectangle(image_gray, (x, y), (x + w, y + h), (0, 0, 255), 3)
+
     for i in range(0, len(numbers)):
-        final_number = overlay
-        final_number[1:27, 7:21] = numbers[i]
-        cv2.imwrite("normPictures/" + str(i) + "number.png", final_number)
+        cv2.imwrite("NumberExamples/" + str(i) + "number.png", numbers[i])
+    """cv2.imshow("result", image_gray)
+    cv2.waitKey(0)"""
 
 
-VALUE = 10
-path = "normPictures/justTrying.png"
+def compare_numbers(number):
+    """
+    compare given number image to all numbers in compareNumbers
+    """
+    differences = []
+    for i in range(0, 10):
+        p = "compareNumbers/" + str(i) + ".png"
+        image = cv2.imread(p)
+        image_compare = cv2.bitwise_or(number, image)
+        gray_original = np.sum(image) / 255
+        gray_new = np.sum(image_compare) / 255
+
+        difference = gray_new - gray_original
+        differences.append(difference)
+    print(differences)
+
+
+VALUE = 100
+path = "NumberExamples/1number.png"
 img = cv2.imread(path)
-return_numbers(img)
+compare_numbers(img)
+# return_numbers(img)

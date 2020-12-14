@@ -121,10 +121,11 @@ def edit_custom_image(image, gray=80):
 
 SIZE = 500
 
-path = "normPictures/justTrying1.png"
+path = "NumberExamples/justTrying.png"
 img = cv2.imread(path)
 img = edit_custom_image(img)
 cv2.imshow("image", img)
 cv2.waitKey(0)
+cv2.imwrite("../milestone2/Arbeit/classificationTry.png", img)
 
 # compare_all(img)

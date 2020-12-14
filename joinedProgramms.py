@@ -138,12 +138,15 @@ def get_contours_all_round(image):
     params.minArea = 10000
 
     params.filterByCircularity = True
+    # how close to a true circle = 4*pi*area/perimeter^2 (is equal to 1 for a true circle)
     params.minCircularity = 0.7
 
     params.filterByConvexity = True
+    # how convex is the shape = area / convexHull(area)
     params.minConvexity = 0.9
 
     params.filterByInertia = True
+    # relatively small since the detected thing is a ellipse
     params.minInertiaRatio = 0.5
 
     detector = cv2.SimpleBlobDetector_create(params)
@@ -188,7 +191,7 @@ for keypoint in keypoints:
     y = int(keypoint.pt[1])
     r = int(keypoint.size) // 2
     # cv2.rectangle(img, (x-r, y-r), (x+r, y+r), (255, 0, 0), 10)
-    cv2.imwrite("normPictures/justTrying1.png", img[y-r:y+r, x-r:x+r])
+    cv2.imwrite("NumberExamples/justTrying1.png", img[y - r:y + r, x - r:x + r])
     cv2.circle(img, (x, y), r, (0, 0, 255), 20)
 
 for rect in result_corner_areas:
